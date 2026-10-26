@@ -47,3 +47,92 @@ There is currently no Thompson NFA, lazy DFA, predictive analyzer, runtime monit
 ## Next steps
 
 Milestone 3 should add Thompson NFA construction and simulation over the same AST, with active-state metrics and differential tests against the backtracking baseline. After that, the predictive analyzer can compare structural risk and workload features while accounting for compilation and resource costs.
+
+## Independent development workflows
+
+The remaining work is divided into three independent vertical workflows. Integration and merging are intentionally kept separate from these assignments.
+
+### Workflow 1 — Thompson NFA
+
+Owner: Collaborator 1
+
+- Implement NFA states and epsilon transitions.
+- Build a Thompson NFA from the shared AST.
+- Implement epsilon closure and NFA simulation.
+- Track active states and simulation steps.
+- Add NFA-specific correctness tests.
+
+Suggested files:
+
+```text
+include/regexforge/nfa.h
+src/nfa.cpp
+tests/nfa_test.cpp
+```
+
+### Workflow 2 — Lazy DFA
+
+Owner: Collaborator 2
+
+- Implement on-demand DFA state construction.
+- Cache DFA states keyed by NFA state sets.
+- Add configurable state and memory limits.
+- Define fallback behavior when limits are reached.
+- Track generated states, cache hits, and construction cost.
+- Add DFA-specific tests.
+
+Suggested files:
+
+```text
+include/regexforge/lazy_dfa.h
+src/lazy_dfa.cpp
+tests/lazy_dfa_test.cpp
+```
+
+The lazy DFA workflow may use a private NFA representation rather than depending on internal classes from the Thompson NFA workflow. Both workflows should expose compatible matching results and metrics.
+
+### Workflow 3 — Predictive execution layer
+
+Owner: Project lead
+
+- Extract AST features for nested quantifiers, overlapping alternations, ambiguity, quantifier depth, estimated NFA states, and input length.
+- Implement configurable normalized risk scoring.
+- Select among backtracking, Thompson NFA, and lazy DFA strategies.
+- Record explainable selection decisions and thresholds.
+- Define runtime monitoring interfaces.
+- Design safe switching or restart-based fallback behavior.
+- Add benchmark and evaluation scaffolding.
+
+Suggested files:
+
+```text
+include/regexforge/analyzer.h
+include/regexforge/strategy_selector.h
+include/regexforge/runtime_monitor.h
+src/analyzer.cpp
+src/strategy_selector.cpp
+src/runtime_monitor.cpp
+tests/analyzer_test.cpp
+tests/selector_test.cpp
+benchmarks/
+docs/
+```
+
+## Shared engine contract
+
+Before parallel implementation, agree on a small public result and matcher contract. Internal NFA and DFA data structures should remain workflow-local.
+
+```cpp
+struct MatchResult {
+    bool matched;
+    ExecutionMetrics metrics;
+};
+
+class Matcher {
+public:
+    virtual MatchResult full_match(std::string_view input) = 0;
+    virtual ~Matcher() = default;
+};
+```
+
+Each workflow should avoid modifying the parser, AST, or existing backtracking engine. Shared changes should be additive interfaces, build configuration, or documentation updates.
