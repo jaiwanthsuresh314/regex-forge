@@ -11,6 +11,9 @@ add_library(regex_forge
     src/parser.cpp
     src/ast_printer.cpp
     src/backtracking.cpp
+    src/analyzer.cpp
+    src/strategy_selector.cpp
+    src/runtime_monitor.cpp
 )
 
 target_include_directories(regex_forge PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -20,7 +23,7 @@ enable_testing()
 find_package(GTest CONFIG QUIET)
 
 if (GTest_FOUND)
-    add_executable(regex_forge_tests tests/lexer_test.cpp tests/parser_test.cpp tests/backtracking_test.cpp)
+    add_executable(regex_forge_tests tests/lexer_test.cpp tests/parser_test.cpp tests/backtracking_test.cpp tests/analyzer_test.cpp tests/selector_test.cpp)
     target_link_libraries(regex_forge_tests PRIVATE regex_forge GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(regex_forge_tests)

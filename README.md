@@ -30,6 +30,18 @@ The baseline `BacktrackingMatcher` executes the shared AST using greedy depth-fi
 
 The matcher is intentionally a correctness baseline, not a production-safe general-purpose engine. Its metrics expose the ambiguous-work growth that later predictive selection and runtime monitoring will address.
 
+### Workflow 3 — predictive execution layer — in progress
+
+The current implementation adds an engine-independent predictive policy layer:
+
+- `PredictiveAnalyzer` extracts AST structure and workload features.
+- Features are normalized against configurable caps and combined with configurable weights using the proposal's weighted risk-score baseline.
+- `StrategySelector` chooses backtracking, Thompson NFA, or lazy DFA based on risk, input size, expected repetition count, and DFA resource permission.
+- Every selection includes the analysis result and a human-readable reason.
+- `RuntimeMonitor` records backtracking steps, active NFA states, generated DFA states, and elapsed time against configurable limits.
+
+This layer does not dispatch to NFA or DFA yet because those engines are separate workflows and are not implemented in the repository. Runtime switching is therefore limited to policy and monitoring interfaces; safe state transfer will be designed after concrete engine state models exist.
+
 ## Build and test
 
 GoogleTest must be available to CMake (for example, through a package configuration visible to `find_package(GTest CONFIG)`). The test target is omitted with a warning when GoogleTest is unavailable.
@@ -42,11 +54,11 @@ ctest --test-dir build --output-on-failure -C Debug
 
 ## Current limitations
 
-There is currently no Thompson NFA, lazy DFA, predictive analyzer, runtime monitor, strategy selector, or runtime switching. The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. The current matcher has no recursion-depth limit separate from its step limit.
+There is currently no Thompson NFA or lazy DFA implementation, and therefore no executable multi-engine dispatch or runtime switching. The predictive analyzer and strategy selector are policy components only until those engines are available. The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. The current matcher has no recursion-depth limit separate from its step limit.
 
 ## Next steps
 
-Milestone 3 should add Thompson NFA construction and simulation over the same AST, with active-state metrics and differential tests against the backtracking baseline. After that, the predictive analyzer can compare structural risk and workload features while accounting for compilation and resource costs.
+Milestones 3 and 4 should add Thompson NFA and lazy DFA engines. Workflow 3 is implemented independently of those engines: it can analyze patterns and produce explainable strategy decisions now, while actual engine dispatch will be integrated once those engines expose the shared matcher contract.
 
 ## Independent development workflows
 
