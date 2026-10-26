@@ -10,9 +10,14 @@ ExecutionLimitExceeded::ExecutionLimitExceeded(std::size_t limit)
 BacktrackingMatcher::BacktrackingMatcher(Ast ast, BacktrackingLimits limits)
     : ast_(std::move(ast)), limits_(limits) {}
 
-bool BacktrackingMatcher::full_match(const std::string& input) {
+MatchResult BacktrackingMatcher::full_match(std::string_view input) {
     metrics_ = {};
-    return match_node(ast_, input, 0, [&](std::size_t position) { return position == input.size(); });
+    const bool matched = match_node(ast_, input, 0, [&](std::size_t position) { return position == input.size(); });
+    return MatchResult{matched, ExecutionMetrics{metrics_.steps, 0, 0, 0}};
+}
+
+bool BacktrackingMatcher::full_match(const std::string& input) {
+    return full_match(std::string_view(input)).matched;
 }
 
 void BacktrackingMatcher::count_step() {
@@ -20,7 +25,7 @@ void BacktrackingMatcher::count_step() {
     ++metrics_.steps;
 }
 
-bool BacktrackingMatcher::match_node(const Ast& node, const std::string& input, std::size_t position,
+bool BacktrackingMatcher::match_node(const Ast& node, std::string_view input, std::size_t position,
                                      const Continuation& continuation) {
     count_step();
     switch (node->kind) {
@@ -42,14 +47,14 @@ bool BacktrackingMatcher::match_node(const Ast& node, const std::string& input, 
 }
 
 bool BacktrackingMatcher::match_sequence(const std::vector<Ast>& nodes, std::size_t index,
-                                         const std::string& input, std::size_t position,
+                                         std::string_view input, std::size_t position,
                                          const Continuation& continuation) {
     if (index == nodes.size()) return continuation(position);
     return match_node(nodes[index], input, position,
                       [&](std::size_t next) { return match_sequence(nodes, index + 1, input, next, continuation); });
 }
 
-bool BacktrackingMatcher::match_star(const Ast& child, const std::string& input, std::size_t position,
+bool BacktrackingMatcher::match_star(const Ast& child, std::string_view input, std::size_t position,
                                      const Continuation& continuation) {
     // Try the greedy path first, but do not recurse when a child consumes nothing.
     if (match_node(child, input, position, [&](std::size_t next) {

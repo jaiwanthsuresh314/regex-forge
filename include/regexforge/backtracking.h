@@ -1,6 +1,7 @@
 #pragma once
 
 #include "regexforge/ast.h"
+#include "regexforge/engine.h"
 
 #include <cstddef>
 #include <functional>
@@ -27,20 +28,21 @@ private:
     std::size_t limit_;
 };
 
-class BacktrackingMatcher {
+class BacktrackingMatcher : public Matcher {
 public:
     explicit BacktrackingMatcher(Ast ast, BacktrackingLimits limits = {});
 
+    MatchResult full_match(std::string_view input) override;
     bool full_match(const std::string& input);
     const BacktrackingMetrics& metrics() const noexcept { return metrics_; }
 
 private:
     using Continuation = std::function<bool(std::size_t)>;
 
-    bool match_node(const Ast& node, const std::string& input, std::size_t position, const Continuation& continuation);
-    bool match_sequence(const std::vector<Ast>& nodes, std::size_t index, const std::string& input,
+    bool match_node(const Ast& node, std::string_view input, std::size_t position, const Continuation& continuation);
+    bool match_sequence(const std::vector<Ast>& nodes, std::size_t index, std::string_view input,
                         std::size_t position, const Continuation& continuation);
-    bool match_star(const Ast& child, const std::string& input, std::size_t position,
+    bool match_star(const Ast& child, std::string_view input, std::size_t position,
                     const Continuation& continuation);
     void count_step();
 

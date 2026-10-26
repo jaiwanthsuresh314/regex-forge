@@ -40,8 +40,9 @@ The current implementation adds an engine-independent predictive policy layer:
 - Every selection includes the analysis result and a human-readable reason.
 - `RuntimeMonitor` records backtracking steps, active NFA states, generated DFA states, and elapsed time against configurable limits.
 - `RuntimeAdapter` converts a limit violation into an explicit action: continue, restart with Thompson NFA, restart with lazy DFA, or abort.
+- `Matcher`, `MatchResult`, and `ExecutionMetrics` define the shared engine contract; the backtracking matcher now implements it while retaining a boolean compatibility helper.
 
-This layer does not dispatch to NFA or DFA yet because those engines are separate workflows and are not implemented in the repository. Adaptation deliberately uses restart-from-input semantics: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision.
+This layer does not dispatch to NFA or DFA yet because those engines are separate workflows and are not implemented in the repository. Adaptation deliberately uses restart-from-input semantics: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision. The shared matcher contract is now available for those workflows.
 
 ## Build and test
 
