@@ -39,8 +39,9 @@ The current implementation adds an engine-independent predictive policy layer:
 - `StrategySelector` chooses backtracking, Thompson NFA, or lazy DFA based on risk, input size, expected repetition count, and DFA resource permission.
 - Every selection includes the analysis result and a human-readable reason.
 - `RuntimeMonitor` records backtracking steps, active NFA states, generated DFA states, and elapsed time against configurable limits.
+- `RuntimeAdapter` converts a limit violation into an explicit action: continue, restart with Thompson NFA, restart with lazy DFA, or abort.
 
-This layer does not dispatch to NFA or DFA yet because those engines are separate workflows and are not implemented in the repository. Runtime switching is therefore limited to policy and monitoring interfaces; safe state transfer will be designed after concrete engine state models exist.
+This layer does not dispatch to NFA or DFA yet because those engines are separate workflows and are not implemented in the repository. Adaptation deliberately uses restart-from-input semantics: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision.
 
 ## Build and test
 
