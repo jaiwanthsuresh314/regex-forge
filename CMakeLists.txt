@@ -16,6 +16,7 @@ add_library(regex_forge
     src/runtime_monitor.cpp
     src/runtime_adaptation.cpp
     src/nfa.cpp
+    src/dispatcher.cpp
 )
 
 target_include_directories(regex_forge PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -25,7 +26,7 @@ enable_testing()
 find_package(GTest CONFIG QUIET)
 
 if (GTest_FOUND)
-    add_executable(regex_forge_tests tests/lexer_test.cpp tests/parser_test.cpp tests/backtracking_test.cpp tests/analyzer_test.cpp tests/selector_test.cpp tests/runtime_adaptation_test.cpp tests/engine_contract_test.cpp tests/nfa_test.cpp)
+    add_executable(regex_forge_tests tests/lexer_test.cpp tests/parser_test.cpp tests/backtracking_test.cpp tests/analyzer_test.cpp tests/selector_test.cpp tests/runtime_adaptation_test.cpp tests/engine_contract_test.cpp tests/nfa_test.cpp tests/dispatcher_test.cpp)
     target_link_libraries(regex_forge_tests PRIVATE regex_forge GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(regex_forge_tests)

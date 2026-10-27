@@ -44,9 +44,10 @@ The current implementation adds an engine-independent predictive policy layer:
 - Every selection includes the analysis result and a human-readable reason.
 - `RuntimeMonitor` records backtracking steps, active NFA states, generated DFA states, and elapsed time against configurable limits.
 - `RuntimeAdapter` converts a limit violation into an explicit action: continue, restart with Thompson NFA, restart with lazy DFA, or abort.
+- `EngineDispatcher` connects a selection decision to an engine factory without coupling the policy layer to engine internals.
 - `Matcher`, `MatchResult`, and `ExecutionMetrics` define the shared engine contract; the backtracking matcher now implements it while retaining a boolean compatibility helper.
 
-This layer does not dispatch to NFA or DFA yet because lazy DFA remains a separate workflow and executable multi-engine dispatch is not implemented. Adaptation deliberately uses restart-from-input semantics: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision. The shared matcher contract is now available for those workflows.
+The dispatcher currently performs the initial selection and full match through a caller-provided engine factory. Runtime adaptation remains restart-from-input: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision.
 
 ## Build and test
 
@@ -60,7 +61,7 @@ ctest --test-dir build --output-on-failure -C Debug
 
 ## Current limitations
 
-There is currently no lazy DFA implementation, and therefore no executable multi-engine dispatch or runtime switching. The predictive analyzer and strategy selector are policy components only until dispatch is integrated. The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. The current backtracking matcher has no recursion-depth limit separate from its step limit.
+There is currently no lazy DFA implementation or automatic runtime switching. The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. The current backtracking matcher has no recursion-depth limit separate from its step limit.
 
 ## Next steps
 
