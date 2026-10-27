@@ -34,6 +34,7 @@ public:
 
     MatchResult full_match(std::string_view input) override;
     bool full_match(const std::string& input);
+    bool full_match(const char* input);
     const BacktrackingMetrics& metrics() const noexcept { return metrics_; }
 
 private:

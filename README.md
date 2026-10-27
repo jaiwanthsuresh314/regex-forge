@@ -30,6 +30,10 @@ The baseline `BacktrackingMatcher` executes the shared AST using greedy depth-fi
 
 The matcher is intentionally a correctness baseline, not a production-safe general-purpose engine. Its metrics expose the ambiguous-work growth that later predictive selection and runtime monitoring will address.
 
+### Milestone 3 — Thompson NFA — in progress
+
+The first alternative engine is now available as `ThompsonNFAMatcher`. It compiles the shared AST into epsilon-NFA fragments, simulates epsilon closure for each input character, performs full-string matching, and reports the maximum active-state count through the shared `ExecutionMetrics` contract. An active-state limit is available for bounded execution.
+
 ### Workflow 3 — predictive execution layer — in progress
 
 The current implementation adds an engine-independent predictive policy layer:
@@ -42,7 +46,7 @@ The current implementation adds an engine-independent predictive policy layer:
 - `RuntimeAdapter` converts a limit violation into an explicit action: continue, restart with Thompson NFA, restart with lazy DFA, or abort.
 - `Matcher`, `MatchResult`, and `ExecutionMetrics` define the shared engine contract; the backtracking matcher now implements it while retaining a boolean compatibility helper.
 
-This layer does not dispatch to NFA or DFA yet because those engines are separate workflows and are not implemented in the repository. Adaptation deliberately uses restart-from-input semantics: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision. The shared matcher contract is now available for those workflows.
+This layer does not dispatch to NFA or DFA yet because lazy DFA remains a separate workflow and executable multi-engine dispatch is not implemented. Adaptation deliberately uses restart-from-input semantics: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision. The shared matcher contract is now available for those workflows.
 
 ## Build and test
 
@@ -56,7 +60,7 @@ ctest --test-dir build --output-on-failure -C Debug
 
 ## Current limitations
 
-There is currently no Thompson NFA or lazy DFA implementation, and therefore no executable multi-engine dispatch or runtime switching. The predictive analyzer and strategy selector are policy components only until those engines are available. The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. The current matcher has no recursion-depth limit separate from its step limit.
+There is currently no lazy DFA implementation, and therefore no executable multi-engine dispatch or runtime switching. The predictive analyzer and strategy selector are policy components only until dispatch is integrated. The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. The current backtracking matcher has no recursion-depth limit separate from its step limit.
 
 ## Next steps
 

@@ -13,11 +13,15 @@ SelectionDecision StrategySelector::select(const Ast& ast, const WorkloadCharact
     const double risk = decision.analysis.risk_score;
     std::ostringstream reason;
     reason << "risk=" << risk;
-    if (risk >= thresholds_.dfa_risk && workload.allow_lazy_dfa && workload.max_dfa_states > 0 &&
-        (workload.expected_repetitions >= thresholds_.min_dfa_repetitions ||
-         workload.input_length >= thresholds_.min_dfa_input_length)) {
+    const bool workload_amortizes_dfa =
+        workload.expected_repetitions >= thresholds_.min_dfa_repetitions ||
+        workload.input_length >= thresholds_.min_dfa_input_length;
+    const bool dfa_risk_justified = risk >= thresholds_.dfa_risk ||
+                                    (risk >= thresholds_.nfa_risk && workload_amortizes_dfa);
+    if (dfa_risk_justified && workload.allow_lazy_dfa && workload.max_dfa_states > 0 &&
+        workload_amortizes_dfa) {
         decision.strategy = Strategy::LazyDFA;
-        reason << "; high risk, workload amortizes DFA construction, state budget available";
+        reason << "; risk and workload justify DFA construction, state budget available";
     } else if (risk >= thresholds_.nfa_risk || workload.input_length > thresholds_.max_backtracking_input_length) {
         decision.strategy = Strategy::ThompsonNFA;
         reason << "; bounded backtracking is undesirable for this risk or input size";

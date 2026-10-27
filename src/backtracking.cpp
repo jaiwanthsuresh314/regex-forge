@@ -20,6 +20,10 @@ bool BacktrackingMatcher::full_match(const std::string& input) {
     return full_match(std::string_view(input)).matched;
 }
 
+bool BacktrackingMatcher::full_match(const char* input) {
+    return full_match(std::string_view(input)).matched;
+}
+
 void BacktrackingMatcher::count_step() {
     if (metrics_.steps >= limits_.max_steps) throw ExecutionLimitExceeded(limits_.max_steps);
     ++metrics_.steps;
