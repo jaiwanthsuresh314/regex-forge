@@ -1,6 +1,7 @@
 #include "regexforge/backtracking.h"
 
 #include <utility>
+#include <chrono>
 
 namespace regexforge {
 
@@ -11,9 +12,17 @@ BacktrackingMatcher::BacktrackingMatcher(Ast ast, BacktrackingLimits limits)
     : ast_(std::move(ast)), limits_(limits) {}
 
 MatchResult BacktrackingMatcher::full_match(std::string_view input) {
+    const auto started = std::chrono::steady_clock::now();
     metrics_ = {};
     const bool matched = match_node(ast_, input, 0, [&](std::size_t position) { return position == input.size(); });
-    return MatchResult{matched, ExecutionMetrics{metrics_.steps, 0, 0, 0}};
+    const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now() - started).count();
+    ExecutionMetrics execution;
+    execution.backtracking_steps = metrics_.steps;
+    execution.steps = metrics_.steps;
+    execution.elapsed_microseconds = static_cast<std::size_t>(elapsed);
+    execution.elapsed_ms = static_cast<double>(elapsed) / 1000.0;
+    return MatchResult{matched, execution};
 }
 
 bool BacktrackingMatcher::full_match(const std::string& input) {

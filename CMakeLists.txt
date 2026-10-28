@@ -17,6 +17,7 @@ add_library(regex_forge
     src/runtime_adaptation.cpp
     src/nfa.cpp
     src/lazy_dfa.cpp
+    src/regex.cpp
     src/dispatcher.cpp
 )
 
@@ -38,6 +39,8 @@ if (GTest_FOUND)
         tests/nfa_test.cpp
         tests/dispatcher_test.cpp
         tests/lazy_dfa_test.cpp
+        tests/regex_test.cpp
+        tests/differential_test.cpp
     )
     target_link_libraries(regex_forge_tests PRIVATE regex_forge GTest::gtest_main)
     include(GoogleTest)

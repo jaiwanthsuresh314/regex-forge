@@ -34,7 +34,7 @@ The matcher is intentionally a correctness baseline, not a production-safe gener
 
 The first alternative engine is now available as `ThompsonNFAMatcher`. It compiles the shared AST into epsilon-NFA fragments, simulates epsilon closure for each input character, performs full-string matching, and reports the maximum active-state count through the shared `ExecutionMetrics` contract. An active-state limit is available for bounded execution.
 
-### Workflow 3 — predictive execution layer — in progress
+### Workflow 3 — predictive execution layer — complete for the current AST
 
 The current implementation adds an engine-independent predictive policy layer:
 
@@ -47,7 +47,7 @@ The current implementation adds an engine-independent predictive policy layer:
 - `EngineDispatcher` connects a selection decision to an engine factory without coupling the policy layer to engine internals.
 - `Matcher`, `MatchResult`, and `ExecutionMetrics` define the shared engine contract; the backtracking matcher now implements it while retaining a boolean compatibility helper.
 
-The dispatcher currently performs the initial selection and full match through a caller-provided engine factory. Runtime adaptation remains restart-from-input: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision.
+The low-level dispatcher remains available for custom engine factories. The public `Regex` facade now parses and compiles a pattern once, selects an engine per input workload, reuses the selected matcher across calls, and returns both the match and explainable selection decision. Runtime adaptation remains restart-from-input: no mid-match state transfer is claimed safe across engines.
 
 ### Milestone 4 — Lazy DFA — complete for the current AST
 
@@ -69,11 +69,11 @@ The parser accepts every non-metacharacter as a literal and reports syntax error
 
 ## Next steps
 
-Milestones 3 and 4 add Thompson NFA and lazy DFA engines. Workflow 3 is implemented independently of those engines: it can analyze patterns and produce explainable strategy decisions now, while actual engine dispatch will be integrated once those engines expose the shared matcher contract.
+The backend is ready for a frontend demo for the current grammar. Future backend extensions are deliberate language features—character classes, anchors, Unicode semantics, and general min/max quantifiers—plus a separate recursion-depth budget for backtracking. These should extend the AST and all three engines together.
 
 ## Independent development workflows
 
-The remaining work is divided into three independent vertical workflows. Integration and merging are intentionally kept separate from these assignments.
+The implementation was developed in three independent vertical workflows and is now integrated on `main`.
 
 ### Workflow 1 — Thompson NFA (Complete)
 
@@ -116,6 +116,10 @@ tests/lazy_dfa_test.cpp
 ```
 
 The implementation uses a private NFA representation rather than depending on internal classes from the Thompson NFA workflow. Both engines expose compatible matching results and metrics.
+
+### Public execution facade
+
+For ordinary callers, use `regexforge::Regex` from `include/regexforge/regex.h`. It accepts a pattern string, chooses among the three engines using the predictive policy, and returns the selected strategy, explanation, match result, and execution metrics. `Regex` instances reuse the selected matcher, so lazy-DFA caches persist across repeated calls with the same workload policy.
 
 ### Workflow 3 — Predictive execution layer
 

@@ -1,6 +1,7 @@
 #include "regexforge/nfa.h"
 
 #include <algorithm>
+#include <chrono>
 #include <stdexcept>
 #include <utility>
 
@@ -250,12 +251,19 @@ ThompsonNFAMatcher::ThompsonNFAMatcher(ThompsonNfa nfa, NfaLimits limits)
     : nfa_(std::move(nfa)), limits_(limits) {}
 
 MatchResult ThompsonNFAMatcher::full_match(std::string_view input) {
+    const auto started = std::chrono::steady_clock::now();
     MatchResult result = nfa_.simulate(input, &metrics_);
     metrics_.active_nfa_states = metrics_.peak_active_states;
     result.metrics.active_nfa_states = metrics_.peak_active_states;
     if (metrics_.peak_active_states > limits_.max_active_states) {
         throw std::runtime_error("NFA active-state limit exceeded");
     }
+    const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now() - started).count();
+    result.metrics.steps = metrics_.steps;
+    result.metrics.peak_active_states = metrics_.peak_active_states;
+    result.metrics.elapsed_microseconds = static_cast<std::size_t>(elapsed);
+    result.metrics.elapsed_ms = static_cast<double>(elapsed) / 1000.0;
     return result;
 }
 
