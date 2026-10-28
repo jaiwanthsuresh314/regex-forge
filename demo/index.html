@@ -81,6 +81,11 @@
               <div class="strategy-reason" id="strategy-reason">Risk and workload justify DFA construction.</div>
             </div>
           </div>
+          <div class="strategy-rail" aria-label="Available execution strategies">
+            <div class="strategy-option" id="strategy-backtracking"><span class="strategy-option-icon">↝</span><span><b>Backtracking</b><small>low risk</small></span></div>
+            <div class="strategy-option" id="strategy-nfa"><span class="strategy-option-icon">◈</span><span><b>Thompson NFA</b><small>bounded paths</small></span></div>
+            <div class="strategy-option" id="strategy-dfa"><span class="strategy-option-icon">↯</span><span><b>Lazy DFA</b><small>repeated work</small></span></div>
+          </div>
 
           <div class="metrics-grid">
             <div class="metric"><span>STEPS</span><strong id="metric-steps">7</strong></div>

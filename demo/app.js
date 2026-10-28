@@ -162,6 +162,7 @@ function render() {
   $('strategy-name').textContent = result.error ? 'No strategy selected' : plan.strategy;
   $('strategy-icon').textContent = result.error ? '!' : plan.strategy === 'Backtracking' ? '↝' : plan.strategy === 'Thompson NFA' ? '◈' : '↯';
   $('strategy-reason').textContent = result.error ? result.error : plan.strategy === 'Lazy DFA' ? 'Risk and workload justify DFA construction.' : plan.strategy === 'Thompson NFA' ? 'Bounded simulation avoids ambiguous backtracking.' : 'Low predicted risk favors the baseline engine.';
+  [['Backtracking', 'strategy-backtracking'], ['Thompson NFA', 'strategy-nfa'], ['Lazy DFA', 'strategy-dfa']].forEach(([name, id]) => $(id).classList.toggle('selected', !result.error && plan.strategy === name));
   $('metric-steps').textContent = result.error ? '—' : plan.steps;
   $('metric-active').textContent = result.error ? '—' : plan.active;
   $('metric-dfa').textContent = result.error ? '—' : plan.dfaStates;
