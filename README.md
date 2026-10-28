@@ -69,25 +69,28 @@ The parser accepts every non-metacharacter as a literal and reports syntax error
 
 ## Next steps
 
-Milestones 3 and 4 should add Thompson NFA and lazy DFA engines. Workflow 3 is implemented independently of those engines: it can analyze patterns and produce explainable strategy decisions now, while actual engine dispatch will be integrated once those engines expose the shared matcher contract.
+Milestones 3 and 4 add Thompson NFA and lazy DFA engines. Workflow 3 is implemented independently of those engines: it can analyze patterns and produce explainable strategy decisions now, while actual engine dispatch will be integrated once those engines expose the shared matcher contract.
 
 ## Independent development workflows
 
 The remaining work is divided into three independent vertical workflows. Integration and merging are intentionally kept separate from these assignments.
 
-### Workflow 1 — Thompson NFA
+### Workflow 1 — Thompson NFA (Complete)
 
 Owner: Collaborator 1
 
-- Implement NFA states and epsilon transitions.
-- Build a Thompson NFA from the shared AST.
-- Implement epsilon closure and NFA simulation.
-- Track active states and simulation steps.
-- Add NFA-specific correctness tests.
+- Implemented `NfaState`, `EpsilonTransition`, and `CharTransition` structures.
+- Implemented Thompson NFA construction from the shared AST (`build_thompson_nfa` and `ThompsonNfa`).
+- Implemented iterative epsilon closure and character transition step.
+- Implemented full-string NFA simulation with linear runtime guarantees against pathological inputs.
+- Implemented simulation metrics tracking: step count, peak active states, final active states, and active-state counts per simulation step.
+- Implemented the shared `Matcher` interface via `NfaMatcher` / `ThompsonNfaMatcher` returning `MatchResult`.
+- Added comprehensive unit, differential (against backtracking baseline), and pathological performance tests in `tests/nfa_test.cpp`.
 
-Suggested files:
+Implemented files:
 
 ```text
+include/regexforge/matcher.h (shared contract)
 include/regexforge/nfa.h
 src/nfa.cpp
 tests/nfa_test.cpp

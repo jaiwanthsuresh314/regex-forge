@@ -6,93 +6,257 @@
 
 namespace regexforge {
 
-ThompsonNFAMatcher::ThompsonNFAMatcher(Ast ast, NfaLimits limits)
-    : ast_(std::move(ast)), limits_(limits) {
-    const Fragment fragment = compile(ast_);
-    start_ = fragment.start;
-    accept_ = fragment.end;
-    states_[accept_].accepting = true;
-}
+namespace {
 
-std::size_t ThompsonNFAMatcher::add_state() {
-    states_.push_back(State{});
-    return states_.size() - 1;
-}
+NfaFragment build_fragment(ThompsonNfa& nfa, const Ast& node) {
+    if (!node) {
+        StateId s = nfa.add_state();
+        StateId t = nfa.add_state();
+        nfa.add_epsilon_transition(s, t);
+        return {s, t};
+    }
 
-ThompsonNFAMatcher::Fragment ThompsonNFAMatcher::compile(const Ast& node) {
     switch (node->kind) {
         case AstNode::Kind::Empty: {
-            const auto start = add_state(); const auto end = add_state();
-            states_[start].epsilon.push_back(end); return {start, end};
+            StateId s = nfa.add_state();
+            StateId t = nfa.add_state();
+            nfa.add_epsilon_transition(s, t);
+            return {s, t};
         }
         case AstNode::Kind::Literal: {
-            const auto start = add_state(); const auto end = add_state();
-            states_[start].transitions.emplace_back(node->literal, end); return {start, end};
+            StateId s = nfa.add_state();
+            StateId t = nfa.add_state();
+            nfa.add_char_transition(s, node->literal, t);
+            return {s, t};
         }
         case AstNode::Kind::Concatenation: {
-            Fragment result = compile(node->children.front());
-            for (std::size_t i = 1; i < node->children.size(); ++i) {
-                const Fragment next = compile(node->children[i]);
-                states_[result.end].epsilon.push_back(next.start); result.end = next.end;
+            if (node->children.empty()) {
+                StateId s = nfa.add_state();
+                StateId t = nfa.add_state();
+                nfa.add_epsilon_transition(s, t);
+                return {s, t};
             }
-            return result;
+            if (node->children.size() == 1) {
+                return build_fragment(nfa, node->children.front());
+            }
+
+            std::vector<NfaFragment> frags;
+            frags.reserve(node->children.size());
+            for (const auto& child : node->children) {
+                frags.push_back(build_fragment(nfa, child));
+            }
+            for (std::size_t i = 0; i + 1 < frags.size(); ++i) {
+                nfa.add_epsilon_transition(frags[i].accept, frags[i + 1].start);
+            }
+            return {frags.front().start, frags.back().accept};
         }
         case AstNode::Kind::Alternation: {
-            const auto start = add_state(); const auto end = add_state();
-            for (const auto& branch : node->children) {
-                const Fragment child = compile(branch);
-                states_[start].epsilon.push_back(child.start);
-                states_[child.end].epsilon.push_back(end);
+            if (node->children.empty()) {
+                StateId s = nfa.add_state();
+                StateId t = nfa.add_state();
+                nfa.add_epsilon_transition(s, t);
+                return {s, t};
             }
-            return {start, end};
+            if (node->children.size() == 1) {
+                return build_fragment(nfa, node->children.front());
+            }
+
+            StateId s = nfa.add_state();
+            StateId t = nfa.add_state();
+            for (const auto& child : node->children) {
+                NfaFragment frag = build_fragment(nfa, child);
+                nfa.add_epsilon_transition(s, frag.start);
+                nfa.add_epsilon_transition(frag.accept, t);
+            }
+            return {s, t};
         }
         case AstNode::Kind::Star: {
-            const auto start = add_state(); const auto end = add_state();
-            const Fragment child = compile(node->children.front());
-            states_[start].epsilon.push_back(end); states_[start].epsilon.push_back(child.start);
-            states_[child.end].epsilon.push_back(child.start); states_[child.end].epsilon.push_back(end);
-            return {start, end};
+            NfaFragment child = build_fragment(nfa, node->children.front());
+            StateId s = nfa.add_state();
+            StateId t = nfa.add_state();
+            nfa.add_epsilon_transition(s, child.start);
+            nfa.add_epsilon_transition(s, t);
+            nfa.add_epsilon_transition(child.accept, child.start);
+            nfa.add_epsilon_transition(child.accept, t);
+            return {s, t};
         }
     }
-    throw std::logic_error("unknown AST node kind");
+
+    StateId s = nfa.add_state();
+    StateId t = nfa.add_state();
+    nfa.add_epsilon_transition(s, t);
+    return {s, t};
 }
 
-void ThompsonNFAMatcher::epsilon_closure(std::vector<std::size_t>& states) const {
-    std::vector<bool> seen(states_.size(), false);
-    std::vector<std::size_t> pending;
-    for (const auto state : states) {
-        if (!seen[state]) { seen[state] = true; pending.push_back(state); }
+}  // namespace
+
+ThompsonNfa::ThompsonNfa(const Ast& ast) {
+    if (!ast) {
+        start_state_ = add_state();
+        accept_state_ = add_state();
+        add_epsilon_transition(start_state_, accept_state_);
+        set_accept_state(accept_state_);
+        return;
     }
-    for (std::size_t i = 0; i < pending.size(); ++i) {
-        for (const auto next : states_[pending[i]].epsilon) {
-            if (!seen[next]) { seen[next] = true; pending.push_back(next); }
+
+    NfaFragment frag = build_fragment(*this, ast);
+    start_state_ = frag.start;
+    set_accept_state(frag.accept);
+}
+
+ThompsonNfa ThompsonNfa::from_ast(const Ast& ast) {
+    return ThompsonNfa(ast);
+}
+
+ThompsonNfa build_thompson_nfa(const Ast& ast) {
+    return ThompsonNfa(ast);
+}
+
+StateId ThompsonNfa::add_state() {
+    StateId id = states_.size();
+    states_.push_back(NfaState{id, {}, {}, false});
+    return id;
+}
+
+void ThompsonNfa::add_epsilon_transition(StateId from, StateId to) {
+    if (from < states_.size()) {
+        states_[from].add_epsilon(to);
+    }
+}
+
+void ThompsonNfa::add_char_transition(StateId from, char symbol, StateId to) {
+    if (from < states_.size()) {
+        states_[from].add_transition(symbol, to);
+    }
+}
+
+void ThompsonNfa::set_accept_state(StateId id) noexcept {
+    accept_state_ = id;
+    if (id < states_.size()) {
+        states_[id].is_accept = true;
+    }
+}
+
+void ThompsonNfa::set_accept(StateId id, bool accept) {
+    if (id < states_.size()) {
+        states_[id].is_accept = accept;
+    }
+}
+
+std::vector<StateId> ThompsonNfa::epsilon_closure(StateId state) const {
+    return epsilon_closure(std::vector<StateId>{state});
+}
+
+std::vector<StateId> ThompsonNfa::epsilon_closure(const std::vector<StateId>& states) const {
+    if (states_.empty()) {
+        return {};
+    }
+
+    std::vector<bool> visited(states_.size(), false);
+    std::vector<StateId> stack;
+    stack.reserve(states_.size());
+
+    for (StateId id : states) {
+        if (id < states_.size() && !visited[id]) {
+            visited[id] = true;
+            stack.push_back(id);
         }
     }
-    states = std::move(pending);
-}
 
-void ThompsonNFAMatcher::record_active(std::size_t count) {
-    max_active_states_ = std::max(max_active_states_, count);
-    if (count > limits_.max_active_states) throw std::runtime_error("NFA active-state limit exceeded");
-}
+    while (!stack.empty()) {
+        StateId u = stack.back();
+        stack.pop_back();
 
-MatchResult ThompsonNFAMatcher::full_match(std::string_view input) {
-    max_active_states_ = 0;
-    std::vector<std::size_t> current{start_};
-    epsilon_closure(current); record_active(current.size());
-    for (const char symbol : input) {
-        std::vector<std::size_t> next;
-        for (const auto state : current) {
-            for (const auto& [value, destination] : states_[state].transitions) {
-                if (value == symbol) next.push_back(destination);
+        for (const auto& eps : states_[u].epsilon_transitions) {
+            StateId v = eps.to;
+            if (v < states_.size() && !visited[v]) {
+                visited[v] = true;
+                stack.push_back(v);
             }
         }
-        epsilon_closure(next); record_active(next.size()); current = std::move(next);
     }
-    const bool matched = std::any_of(current.begin(), current.end(), [&](const auto state) {
-        return states_[state].accepting;
-    });
-    return MatchResult{matched, ExecutionMetrics{0, max_active_states_, 0, 0}};
+
+    std::vector<StateId> result;
+    result.reserve(states_.size());
+    for (StateId i = 0; i < states_.size(); ++i) {
+        if (visited[i]) {
+            result.push_back(i);
+        }
+    }
+    return result;
+}
+
+std::vector<StateId> ThompsonNfa::step(const std::vector<StateId>& current_states, char symbol) const {
+    std::vector<StateId> targets;
+    for (StateId u : current_states) {
+        if (u >= states_.size()) continue;
+        for (const auto& trans : states_[u].char_transitions) {
+            if (trans.symbol == symbol) {
+                targets.push_back(trans.to);
+            }
+        }
+    }
+    return epsilon_closure(targets);
+}
+
+MatchResult ThompsonNfa::simulate(std::string_view input, NfaMetrics* detailed_metrics,
+                                  bool early_termination) const {
+    NfaMetrics local;
+    NfaMetrics& m = detailed_metrics ? *detailed_metrics : local;
+    m = {};
+
+    if (states_.empty()) {
+        return MatchResult{false, m};
+    }
+
+    std::vector<StateId> current = epsilon_closure(start_state_);
+    m.active_state_counts.push_back(current.size());
+    m.peak_active_states = current.size();
+
+    for (char c : input) {
+        if (current.empty() && early_termination) {
+            break;
+        }
+        ++m.steps;
+        if (current.empty()) {
+            m.active_state_counts.push_back(0);
+            continue;
+        }
+        current = step(current, c);
+        m.active_state_counts.push_back(current.size());
+        if (current.size() > m.peak_active_states) {
+            m.peak_active_states = current.size();
+        }
+    }
+
+    m.active_states = current.size();
+    m.active_nfa_states = m.peak_active_states;
+
+    bool matched = false;
+    for (StateId id : current) {
+        if (id == accept_state_ || (id < states_.size() && states_[id].is_accept)) {
+            matched = true;
+            break;
+        }
+    }
+
+    return MatchResult{matched, m};
+}
+
+ThompsonNFAMatcher::ThompsonNFAMatcher(Ast ast, NfaLimits limits)
+    : nfa_(ast), limits_(limits) {}
+
+ThompsonNFAMatcher::ThompsonNFAMatcher(ThompsonNfa nfa, NfaLimits limits)
+    : nfa_(std::move(nfa)), limits_(limits) {}
+
+MatchResult ThompsonNFAMatcher::full_match(std::string_view input) {
+    MatchResult result = nfa_.simulate(input, &metrics_);
+    metrics_.active_nfa_states = metrics_.peak_active_states;
+    result.metrics.active_nfa_states = metrics_.peak_active_states;
+    if (metrics_.peak_active_states > limits_.max_active_states) {
+        throw std::runtime_error("NFA active-state limit exceeded");
+    }
+    return result;
 }
 
 }  // namespace regexforge
