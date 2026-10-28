@@ -87,7 +87,16 @@ function graphSvg(pattern, value, step) {
   } catch (error) { return `<div class="graph-error">${error.message}</div>`; }
 }
 
-function renderGraph() { const pattern = patternInput.value; const value = inputInput.value; const step = Number($('step-range').value); $('step-value').textContent = `${step} / ${value.length}`; $('graph-canvas').innerHTML = graphSvg(pattern, value, step); $('graph-footnote').textContent = graphMode === 'nfa' ? 'Thompson construction · ε-transitions shown' : 'Subset construction · cached DFA states'; }
+function renderGraph() {
+  const pattern = patternInput.value; const value = inputInput.value; const runs = Number(repetitions.value); const cycle = value.length + 1;
+  const totalStep = Math.min(Number($('step-range').value), cycle * runs);
+  const position = value.length ? Math.min(value.length, totalStep % cycle) : 0;
+  const run = Math.min(runs, Math.floor(totalStep / cycle) + 1);
+  $('step-value').textContent = `${position} / ${value.length}`;
+  $('graph-run-label').textContent = `run ${run} / ${runs}`;
+  $('graph-canvas').innerHTML = graphSvg(pattern, value, position);
+  $('graph-footnote').textContent = graphMode === 'nfa' ? `Thompson construction · ε-transitions · ${runs} expected run${runs === 1 ? '' : 's'}` : `Subset construction · cached DFA states · ${runs} expected run${runs === 1 ? '' : 's'}`;
+}
 
 function safeMatch(pattern, value) {
   try {
@@ -176,12 +185,13 @@ function render() {
   fallback.classList.toggle('is-fallback', plan.fallback);
   fallback.innerHTML = plan.fallback ? '<span>!</span> DFA budget reached — restarted with Thompson NFA.' : '<span>✓</span> No fallback required — cache remains within budget.';
   renderAst(pattern);
-  $('step-range').max = value.length;
-  if (Number($('step-range').value) > value.length) $('step-range').value = value.length;
+  const graphMax = (value.length + 1) * Number(repetitions.value);
+  $('step-range').max = Math.max(1, graphMax);
+  if (Number($('step-range').value) > graphMax) $('step-range').value = graphMax;
   renderGraph();
 }
 
-repetitions.addEventListener('input', () => { $('repetitions-value').textContent = `${repetitions.value}×`; render(); });
+repetitions.addEventListener('input', () => { $('repetitions-value').textContent = `${repetitions.value}×`; $('step-range').value = 0; render(); });
 patternInput.addEventListener('input', render);
 inputInput.addEventListener('input', render);
 allowDfa.addEventListener('change', render);
