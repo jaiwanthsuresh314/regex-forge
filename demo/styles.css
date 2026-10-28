@@ -71,3 +71,32 @@ input[type=range] { accent-color:var(--mint-deep); width:100%; margin-top:11px; 
 .footer-slash { color:var(--mint-deep); }
 @media (max-width:800px) { .shell{padding:22px 18px}.hero{padding:70px 0 42px}.workspace{grid-template-columns:1fr}.footer-right{display:none} }
 @media (max-width:430px) { h1{font-size:51px}.card{padding:20px}.metrics-grid{grid-template-columns:repeat(2,1fr)}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.trace-code{max-width:52%} }
+
+/* Night mode: the graph and execution trace are the visual focus. */
+:root { --ink:#e8f4ee; --muted:#91aaa0; --line:#203b31; --paper:#08110e; --card:#0d1c17; --mint:#a8f2c7; --mint-deep:#65d99a; --orange:#f5b763; --red:#f27676; }
+body:before { opacity:.16; background-image:radial-gradient(#6b9a83 .7px,transparent .7px); }
+.card { background:#0d1c17; border-color:#203b31; box-shadow:0 18px 45px #00000035; }
+.brand { color:var(--ink); }.brand-mark { background:var(--mint); color:#092017; }
+.ghost-button,.examples button { background:#12271f; border-color:#254439; color:#91aaa0; }
+.input-wrap { background:#091711; border-color:#254439; }.input-wrap input { color:#e8f4ee; }
+.input-wrap:focus-within { border-color:#4ecb87; box-shadow:0 0 0 3px #174d35; }
+.strategy-panel { background:#10271e; border-color:#1d4934; }.strategy-icon { background:#1b5439; color:var(--mint); }
+.status-badge { background:#113c29; color:var(--mint); }.status-badge.no-match { background:#431e23; color:#ff9696; }
+.status-badge.no-match .status-dot { background:var(--red); box-shadow:0 0 0 4px #54282b; }
+.metrics-grid { border-color:var(--line); }.metric { border-color:var(--line); }
+.fallback-note { background:#10221b; color:#9ab0a7; }.fallback-note.is-fallback { background:#382a18; color:#e6bc79; }
+.run-button { background:var(--mint); color:#082017; }.run-button:hover { background:#c5f8d9; }
+.ast-node { border-color:#286a4b; color:#92e9b5; background:#10261d; }.ast-connector { color:#638778; }
+.graph-block { border-top:1px solid var(--line); margin-top:24px; padding-top:19px; }
+.graph-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.graph-title { font-size:16px; font-weight:800; letter-spacing:-.04em; margin-top:4px; }
+.graph-tabs { display:flex; gap:3px; padding:3px; border:1px solid #254439; border-radius:8px; background:#091711; }
+.graph-tab { border:0; border-radius:6px; padding:7px 11px; background:transparent; color:#77968a; font:500 10px 'DM Mono',monospace; cursor:pointer; }
+.graph-tab.active { background:#1d4e38; color:var(--mint); }
+.step-row { display:flex; align-items:center; gap:11px; margin-top:18px; }.step-row input { flex:1; accent-color:var(--mint-deep); }.step-row output { min-width:38px; text-align:right; }
+.graph-canvas { margin-top:12px; min-height:174px; border:1px solid #1b352c; border-radius:10px; background:radial-gradient(circle at 50% 0%,#143025 0,#0a1712 62%); overflow:hidden; }
+.graph-canvas svg { display:block; width:100%; height:174px; }
+.graph-edge { fill:none; stroke:#3b6252; stroke-width:1.3; }.graph-edge.active { stroke:var(--mint); stroke-width:2.3; filter:drop-shadow(0 0 4px #67dfa0); }
+.graph-edge-label { fill:#88a69b; font:10px 'DM Mono',monospace; }.graph-node { fill:#12261e; stroke:#3c6554; stroke-width:1.4; }.graph-node.active { fill:#1e5a3e; stroke:var(--mint); filter:drop-shadow(0 0 7px #52d58c); }.graph-node.accept { stroke:#e6c37d; }.graph-node-label { fill:#d7ece1; font:10px 'DM Mono',monospace; text-anchor:middle; dominant-baseline:middle; }.graph-start-line { stroke:#6c9c86; stroke-width:1.2; }.graph-legend { display:flex; align-items:center; gap:12px; flex-wrap:wrap; color:#7d988c; font:9px 'DM Mono',monospace; margin-top:10px; }.graph-legend span { display:inline-flex; align-items:center; gap:5px; }.legend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; background:#3c6554; }.legend-dot.start { background:#6c9c86; }.legend-dot.active { background:var(--mint); box-shadow:0 0 0 3px #1c4e36; }.legend-dot.accept { background:#e6c37d; }.graph-footnote { margin-left:auto; color:#638778; }
+.footer { border-color:var(--line); }
+@media (max-width:600px) { .graph-footnote { width:100%; margin-left:0; }.graph-toolbar{align-items:flex-start;}.step-row{flex-wrap:wrap}.step-row input{order:3; flex-basis:100%;} }

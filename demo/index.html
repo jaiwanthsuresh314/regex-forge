@@ -92,6 +92,26 @@
             <div class="trace-heading"><span class="muted-label">AST SHAPE</span><span class="trace-code" id="ast-shape">Concat(Star(Alt('a', 'b')), 'a', 'b', 'b')</span></div>
             <div class="ast-visual" id="ast-visual"></div>
           </div>
+
+          <div class="graph-block">
+            <div class="graph-toolbar">
+              <div>
+                <span class="muted-label">AUTOMATON VIEW</span>
+                <div class="graph-title">Live state graph</div>
+              </div>
+              <div class="graph-tabs" role="tablist" aria-label="Automaton graph">
+                <button class="graph-tab active" id="nfa-tab" type="button" role="tab" aria-selected="true">NFA</button>
+                <button class="graph-tab" id="dfa-tab" type="button" role="tab" aria-selected="false">DFA</button>
+              </div>
+            </div>
+            <div class="step-row">
+              <span class="muted-label">INPUT PROGRESS</span>
+              <input id="step-range" type="range" min="0" max="7" value="7">
+              <output id="step-value">7 / 7</output>
+            </div>
+            <div class="graph-canvas" id="graph-canvas" role="img" aria-label="Interactive automaton graph"></div>
+            <div class="graph-legend"><span><i class="legend-dot start"></i>start</span><span><i class="legend-dot active"></i>active</span><span><i class="legend-dot accept"></i>accept</span><span class="graph-footnote" id="graph-footnote">Thompson construction · ε-transitions shown</span></div>
+          </div>
         </div>
       </section>
 
