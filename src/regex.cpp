@@ -34,4 +34,14 @@ RegexMatchResult Regex::full_match(std::string_view input) {
     return RegexMatchResult{matcher_->full_match(input), selection.strategy, selection};
 }
 
+std::array<EngineComparison, 3> Regex::compare_all(std::string_view input) const {
+    const std::array strategies{Strategy::Backtracking, Strategy::ThompsonNFA, Strategy::LazyDFA};
+    std::array<EngineComparison, 3> comparison{};
+    for (std::size_t i = 0; i < strategies.size(); ++i) {
+        auto matcher = make_matcher(strategies[i]);
+        comparison[i] = EngineComparison{strategies[i], matcher->full_match(input)};
+    }
+    return comparison;
+}
+
 }  // namespace regexforge

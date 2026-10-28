@@ -7,6 +7,7 @@
 #include "regexforge/strategy_selector.h"
 
 #include <cstddef>
+#include <array>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -30,6 +31,11 @@ struct RegexMatchResult {
     SelectionDecision selection;
 };
 
+struct EngineComparison {
+    Strategy strategy = Strategy::Backtracking;
+    MatchResult match;
+};
+
 /// Compiled, reusable regular expression using the shared predictive policy.
 /// Instances are not thread-safe because lazy DFA caches are mutable.
 class Regex {
@@ -39,6 +45,7 @@ public:
     RegexMatchResult full_match(std::string_view input);
     RegexMatchResult full_match(const std::string& input) { return full_match(std::string_view(input)); }
     RegexMatchResult full_match(const char* input) { return full_match(std::string_view(input)); }
+    std::array<EngineComparison, 3> compare_all(std::string_view input) const;
 
     const std::string& pattern() const noexcept { return pattern_; }
     const Ast& ast() const noexcept { return ast_; }

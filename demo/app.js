@@ -159,6 +159,19 @@ function renderAst(pattern) {
   $('ast-visual').innerHTML = nodes.join('');
 }
 
+function renderComparison(pattern, value, plan, result) {
+  const engines = [
+    { name: 'Backtracking', icon: '↝', steps: Math.max(1, value.length + plan.ambiguity), active: '—', dfa: '—', fallback: false },
+    { name: 'Thompson NFA', icon: '◈', steps: value.length, active: Math.max(1, plan.active), dfa: '—', fallback: false },
+    { name: 'Lazy DFA', icon: '↯', steps: value.length, active: Math.max(1, plan.active), dfa: Math.max(1, plan.dfaStates), fallback: plan.fallback },
+  ];
+  $('comparison-caption').textContent = `${pattern || '∅'} · ${value.length} input chars`;
+  $('comparison-table').innerHTML = result.error ? '<div class="comparison-error">Comparison unavailable until the pattern parses.</div>' : engines.map((engine) => {
+    const effective = engine.fallback ? 'fallback' : '';
+    return `<div class="comparison-row${engine.name === (plan.fallback ? 'Thompson NFA' : plan.strategy) ? ' selected' : ''}" role="row"><span class="comparison-engine" role="cell"><i>${engine.icon}</i>${engine.name}${effective ? '<small>fallback</small>' : ''}</span><span role="cell" class="comparison-match ${result.matched ? 'yes' : 'no'}">${result.matched ? 'MATCH' : 'NO MATCH'}</span><span role="cell">${engine.steps} steps</span><span role="cell">${engine.active} active</span><span role="cell">${engine.dfa} DFA</span></div>`;
+  }).join('');
+}
+
 function render() {
   const pattern = patternInput.value;
   const value = inputInput.value;
@@ -185,6 +198,7 @@ function render() {
   fallback.classList.toggle('is-fallback', plan.fallback);
   fallback.innerHTML = plan.fallback ? '<span>!</span> DFA budget reached — restarted with Thompson NFA.' : '<span>✓</span> No fallback required — cache remains within budget.';
   renderAst(pattern);
+  renderComparison(pattern, value, plan, result);
   const graphMax = (value.length + 1) * Number(repetitions.value);
   $('step-range').max = Math.max(1, graphMax);
   if (Number($('step-range').value) > graphMax) $('step-range').value = graphMax;

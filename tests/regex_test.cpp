@@ -29,3 +29,16 @@ TEST(RegexTest, UsesLazyDfaWhenWorkloadJustifiesIt) {
 TEST(RegexTest, RejectsMalformedPatternsAtConstruction) {
     EXPECT_THROW(Regex("(ab"), ParseError);
 }
+
+TEST(RegexTest, ComparesAllEnginesOnTheSameInput) {
+    Regex regex("(a|b)*abb");
+    const auto comparison = regex.compare_all("abababb");
+
+    ASSERT_EQ(comparison.size(), 3U);
+    EXPECT_EQ(comparison[0].strategy, Strategy::Backtracking);
+    EXPECT_EQ(comparison[1].strategy, Strategy::ThompsonNFA);
+    EXPECT_EQ(comparison[2].strategy, Strategy::LazyDFA);
+    EXPECT_TRUE(comparison[0].match.matched);
+    EXPECT_TRUE(comparison[1].match.matched);
+    EXPECT_TRUE(comparison[2].match.matched);
+}
