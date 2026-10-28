@@ -10,6 +10,13 @@ struct ExecutionMetrics {
     std::size_t active_nfa_states = 0;
     std::size_t generated_dfa_states = 0;
     std::size_t elapsed_microseconds = 0;
+
+    // Cross-engine names used by the predictive execution layer. The legacy
+    // fields above remain available for compatibility.
+    std::size_t steps = 0;
+    std::size_t peak_active_states = 0;
+    bool fell_back = false;
+    double elapsed_ms = 0.0;
 };
 
 struct MatchResult {

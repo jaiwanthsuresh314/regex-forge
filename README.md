@@ -30,7 +30,7 @@ The baseline `BacktrackingMatcher` executes the shared AST using greedy depth-fi
 
 The matcher is intentionally a correctness baseline, not a production-safe general-purpose engine. Its metrics expose the ambiguous-work growth that later predictive selection and runtime monitoring will address.
 
-### Milestone 3 — Thompson NFA — in progress
+### Milestone 3 — Thompson NFA — complete
 
 The first alternative engine is now available as `ThompsonNFAMatcher`. It compiles the shared AST into epsilon-NFA fragments, simulates epsilon closure for each input character, performs full-string matching, and reports the maximum active-state count through the shared `ExecutionMetrics` contract. An active-state limit is available for bounded execution.
 
@@ -49,6 +49,10 @@ The current implementation adds an engine-independent predictive policy layer:
 
 The dispatcher currently performs the initial selection and full match through a caller-provided engine factory. Runtime adaptation remains restart-from-input: no mid-match state transfer is claimed safe across engines. The caller must instantiate the target engine and restart matching after receiving a restart decision.
 
+### Milestone 4 — Lazy DFA — complete for the current AST
+
+`LazyDFAMatcher` builds a private Thompson-style NFA and constructs DFA states on demand, caching them across `full_match` calls. It supports the current AST grammar, reports generated-state and elapsed-time metrics, and falls back to Thompson NFA execution when the configured state or memory limit is reached. After the configured number of fallback events, further limit violations throw instead of growing without bound.
+
 ## Build and test
 
 GoogleTest must be available to CMake (for example, through a package configuration visible to `find_package(GTest CONFIG)`). The test target is omitted with a warning when GoogleTest is unavailable.
@@ -61,7 +65,7 @@ ctest --test-dir build --output-on-failure -C Debug
 
 ## Current limitations
 
-There is currently no lazy DFA implementation or automatic runtime switching. The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. The current backtracking matcher has no recursion-depth limit separate from its step limit.
+The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. Character classes, Unicode-specific rules, anchors, backreferences, lookarounds, and general min/max quantifiers are not yet part of the AST. The current backtracking matcher has no recursion-depth limit separate from its step limit.
 
 ## Next steps
 
@@ -89,7 +93,7 @@ src/nfa.cpp
 tests/nfa_test.cpp
 ```
 
-### Workflow 2 — Lazy DFA
+### Workflow 2 — Lazy DFA — complete
 
 Owner: Collaborator 2
 
@@ -108,7 +112,7 @@ src/lazy_dfa.cpp
 tests/lazy_dfa_test.cpp
 ```
 
-The lazy DFA workflow may use a private NFA representation rather than depending on internal classes from the Thompson NFA workflow. Both workflows should expose compatible matching results and metrics.
+The implementation uses a private NFA representation rather than depending on internal classes from the Thompson NFA workflow. Both engines expose compatible matching results and metrics.
 
 ### Workflow 3 — Predictive execution layer
 
