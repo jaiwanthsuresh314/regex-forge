@@ -30,6 +30,7 @@ h2 { margin:7px 0 0; letter-spacing:-.05em; font-size:23px; }
 .input-prefix,.input-suffix { color:var(--mint-deep); font:500 15px 'DM Mono',monospace; padding:0 12px; }
 .examples { display:flex; gap:7px; flex-wrap:wrap; margin-top:8px; }
 .examples button { border:1px solid var(--line); background:#fff; color:#75827e; border-radius:20px; padding:5px 9px; font:400 10px 'DM Mono',monospace; cursor:pointer; }
+.examples .custom-example { color:var(--mint-deep); border-color:#347455; background:#102c20; }
 .options-row { gap:14px; margin-top:25px; }
 .range-label { color:#52625e; font-size:12px; font-weight:700; display:flex; justify-content:space-between; flex:1; }
 output { color:var(--mint-deep); font:500 11px 'DM Mono',monospace; }
