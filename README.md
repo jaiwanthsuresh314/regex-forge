@@ -63,6 +63,10 @@ cmake --build build --config Debug
 ctest --test-dir build --output-on-failure -C Debug
 ```
 
+## Frontend demo
+
+The dependency-free browser playground is in [`demo/index.html`](demo/index.html). Open that file directly in a browser to explore full-match behavior, predictive strategy selection, execution metrics, and fallback messaging. The page mirrors the current grammar in a small browser adapter; production integration can replace that adapter with a WebAssembly or HTTP bridge to the C++ `Regex` facade.
+
 ## Current limitations
 
 The parser accepts every non-metacharacter as a literal and reports syntax errors with a zero-based source position. Character classes, Unicode-specific rules, anchors, backreferences, lookarounds, and general min/max quantifiers are not yet part of the AST. The current backtracking matcher has no recursion-depth limit separate from its step limit.

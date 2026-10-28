@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Regex Forge — Execution Playground</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="Regex Forge home">
+          <span class="brand-mark">//</span>
+          <span>Regex Forge</span>
+        </a>
+        <span class="build-pill"><span class="live-dot"></span> interactive demo</span>
+      </header>
+
+      <section class="hero" id="top">
+        <div class="eyebrow">PREDICTIVE REGEX EXECUTION</div>
+        <h1>See the engine<br><em>choose its path.</em></h1>
+        <p class="lede">Explore full-string matching across backtracking, Thompson NFA, and lazy DFA execution.</p>
+      </section>
+
+      <section class="workspace" aria-label="Regex playground">
+        <div class="card controls-card">
+          <div class="card-heading">
+            <div>
+              <span class="section-kicker">01 / PATTERN</span>
+              <h2>Build a match</h2>
+            </div>
+            <button class="ghost-button" id="reset-button" type="button">Reset</button>
+          </div>
+
+          <label class="field-label" for="pattern">Regex pattern</label>
+          <div class="input-wrap pattern-wrap">
+            <span class="input-prefix">/</span>
+            <input id="pattern" value="(a|b)*abb" spellcheck="false" autocomplete="off">
+            <span class="input-suffix">/</span>
+          </div>
+          <div class="examples" aria-label="Pattern examples">
+            <button type="button" data-pattern="(a|b)*abb">ambiguous path</button>
+            <button type="button" data-pattern="ab*">repetition</button>
+            <button type="button" data-pattern="a|bc*">alternation</button>
+          </div>
+
+          <label class="field-label" for="input">Input string</label>
+          <div class="input-wrap">
+            <input id="input" value="abababb" spellcheck="false" autocomplete="off">
+          </div>
+
+          <div class="options-row">
+            <label class="range-label" for="repetitions">Expected repetitions <output id="repetitions-value">8×</output></label>
+            <input id="repetitions" type="range" min="1" max="12" value="8">
+          </div>
+          <label class="toggle-row">
+            <input id="allow-dfa" type="checkbox" checked>
+            <span class="toggle"></span>
+            Allow lazy DFA construction
+          </label>
+          <button class="run-button" id="run-button" type="button"><span>Run full match</span><span class="run-arrow">→</span></button>
+          <p class="hint">Full-match semantics: the entire input must be accepted.</p>
+        </div>
+
+        <div class="card result-card" aria-live="polite">
+          <div class="card-heading result-heading">
+            <div>
+              <span class="section-kicker">02 / RESULT</span>
+              <h2>Execution trace</h2>
+            </div>
+            <span class="status-badge" id="status-badge"><span class="status-dot"></span><span id="status-text">MATCH</span></span>
+          </div>
+
+          <div class="strategy-panel">
+            <div class="strategy-icon" id="strategy-icon">↯</div>
+            <div>
+              <span class="muted-label">SELECTED STRATEGY</span>
+              <div class="strategy-name" id="strategy-name">Lazy DFA</div>
+              <div class="strategy-reason" id="strategy-reason">Risk and workload justify DFA construction.</div>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric"><span>STEPS</span><strong id="metric-steps">7</strong></div>
+            <div class="metric"><span>PEAK ACTIVE</span><strong id="metric-active">4</strong></div>
+            <div class="metric"><span>DFA STATES</span><strong id="metric-dfa">5</strong></div>
+            <div class="metric"><span>ELAPSED</span><strong id="metric-time">0.04<span> ms</span></strong></div>
+          </div>
+          <div class="fallback-note" id="fallback-note"><span>✓</span> No fallback required — cache remains within budget.</div>
+
+          <div class="trace-block">
+            <div class="trace-heading"><span class="muted-label">AST SHAPE</span><span class="trace-code" id="ast-shape">Concat(Star(Alt('a', 'b')), 'a', 'b', 'b')</span></div>
+            <div class="ast-visual" id="ast-visual"></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>Current grammar: literals · groups · alternation · star</span>
+        <span class="footer-right">Regex Forge <span class="footer-slash">//</span> backend playground</span>
+      </footer>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
