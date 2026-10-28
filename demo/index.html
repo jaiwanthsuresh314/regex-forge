@@ -39,9 +39,11 @@
             <span class="input-suffix">/</span>
           </div>
           <div class="examples" aria-label="Pattern examples">
-            <button type="button" data-pattern="(a|b)*abb">ambiguous path</button>
-            <button type="button" data-pattern="ab*">repetition</button>
-            <button type="button" data-pattern="a|bc*">alternation</button>
+            <button type="button" data-pattern="abc" data-input="abc" data-repetitions="1">baseline · backtracking</button>
+            <button type="button" data-pattern="((a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p)*)*" data-input="abababababababababababababababab" data-repetitions="1">pathological · NFA</button>
+            <button type="button" data-pattern="((a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p)*)*" data-input="abababababababababababababababab" data-repetitions="8">reuse · lazy DFA</button>
+            <button type="button" data-pattern="ab*" data-input="abbb" data-repetitions="1">repetition</button>
+            <button type="button" data-pattern="a|bc*" data-input="bcc" data-repetitions="4">alternation</button>
           </div>
 
           <label class="field-label" for="input">Input string</label>
@@ -87,6 +89,18 @@
             <div class="metric"><span>ELAPSED</span><strong id="metric-time">0.04<span> ms</span></strong></div>
           </div>
           <div class="fallback-note" id="fallback-note"><span>✓</span> No fallback required — cache remains within budget.</div>
+
+          <div class="risk-panel">
+            <div class="risk-heading"><span class="muted-label">PREDICTIVE SIGNAL</span><strong id="risk-score">12.4<span>/ 100</span></strong></div>
+            <div class="risk-bars">
+              <div class="risk-bar-row"><span>nested quantifiers</span><div class="risk-track"><i id="risk-nested"></i></div><b id="risk-nested-value">0%</b></div>
+              <div class="risk-bar-row"><span>overlapping alternations</span><div class="risk-track"><i id="risk-overlap"></i></div><b id="risk-overlap-value">0%</b></div>
+              <div class="risk-bar-row"><span>ambiguous paths</span><div class="risk-track"><i id="risk-ambiguous"></i></div><b id="risk-ambiguous-value">0%</b></div>
+              <div class="risk-bar-row"><span>quantifier depth</span><div class="risk-track"><i id="risk-depth"></i></div><b id="risk-depth-value">0%</b></div>
+              <div class="risk-bar-row"><span>NFA state estimate</span><div class="risk-track"><i id="risk-nfa"></i></div><b id="risk-nfa-value">0%</b></div>
+              <div class="risk-bar-row"><span>input pressure</span><div class="risk-track"><i id="risk-input"></i></div><b id="risk-input-value">0%</b></div>
+            </div>
+          </div>
 
           <div class="trace-block">
             <div class="trace-heading"><span class="muted-label">AST SHAPE</span><span class="trace-code" id="ast-shape">Concat(Star(Alt('a', 'b')), 'a', 'b', 'b')</span></div>

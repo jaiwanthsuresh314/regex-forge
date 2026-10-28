@@ -103,16 +103,29 @@ function estimate(pattern, value, repeats, dfaAllowed) {
   const stars = (pattern.match(/\*/g) || []).length;
   const alternations = (pattern.match(/\|/g) || []).length;
   const groups = (pattern.match(/\(/g) || []).length;
-  const ambiguity = stars * 18 + alternations * 9 + groups * 4;
+  const nested = Math.max(0, stars - 1);
+  const overlap = Math.min(32, alternations * (groups > 0 ? 1.4 : 0.6));
+  const ambiguous = Math.min(32, alternations + stars * 2 + nested * 4);
+  const nfaStates = Math.min(128, 1 + pattern.length + stars * 2 + alternations * 2);
+  const normalized = {
+    nested: Math.min(1, nested / 8),
+    overlap: overlap / 32,
+    ambiguous: ambiguous / 32,
+    input: Math.min(1, value.length / 256),
+    nfa: nfaStates / 128,
+    depth: Math.min(1, (stars > 1 ? 2 : stars) / 8),
+  };
+  const riskScore = 100 * (0.25 * normalized.nested + 0.20 * normalized.overlap + 0.20 * normalized.ambiguous + 0.15 * normalized.depth + 0.10 * normalized.nfa + 0.10 * normalized.input);
+  const ambiguity = nested * 18 + alternations * 9 + groups * 4;
   const workloadAmortized = repeats >= 4 || value.length >= 32;
-  const useDfa = dfaAllowed && workloadAmortized && (ambiguity >= 20 || value.length >= 32);
-  const useNfa = !useDfa && (ambiguity >= 28 || value.length > 512);
+  const useDfa = dfaAllowed && workloadAmortized && (riskScore >= 60 || (riskScore >= 30 && workloadAmortized));
+  const useNfa = !useDfa && (riskScore >= 30 || value.length > 512);
   const strategy = useDfa ? 'Lazy DFA' : useNfa ? 'Thompson NFA' : 'Backtracking';
   const steps = strategy === 'Backtracking' ? Math.max(1, value.length + ambiguity) : value.length;
   const active = strategy === 'Backtracking' ? 0 : Math.max(1, Math.min(12, 1 + groups + alternations));
   const dfaStates = strategy === 'Lazy DFA' ? Math.max(1, Math.min(10, 2 + stars + alternations)) : 0;
   const fallback = strategy === 'Lazy DFA' && dfaStates > 8;
-  return { strategy, steps, active, dfaStates, fallback, ambiguity };
+  return { strategy, steps, active, dfaStates, fallback, ambiguity, riskScore, normalized };
 }
 
 function astShape(pattern) {
@@ -153,6 +166,9 @@ function render() {
   $('metric-active').textContent = result.error ? '—' : plan.active;
   $('metric-dfa').textContent = result.error ? '—' : plan.dfaStates;
   $('metric-time').innerHTML = result.error ? '—' : `${(0.02 + value.length * 0.003).toFixed(2)}<span> ms</span>`;
+  $('risk-score').innerHTML = result.error ? '—' : `${plan.riskScore.toFixed(1)}<span>/ 100</span>`;
+  const riskRows = [['nested', plan.normalized.nested], ['overlap', plan.normalized.overlap], ['ambiguous', plan.normalized.ambiguous], ['depth', plan.normalized.depth], ['nfa', plan.normalized.nfa], ['input', plan.normalized.input]];
+  riskRows.forEach(([name, amount]) => { $(`risk-${name}`).style.width = `${Math.round(amount * 100)}%`; $(`risk-${name}-value`).textContent = `${Math.round(amount * 100)}%`; });
   $('ast-shape').textContent = result.error ? 'ParseError' : astShape(pattern);
   const fallback = $('fallback-note');
   fallback.classList.toggle('is-fallback', plan.fallback);
@@ -172,5 +188,5 @@ $('nfa-tab').addEventListener('click', () => { graphMode = 'nfa'; $('nfa-tab').c
 $('dfa-tab').addEventListener('click', () => { graphMode = 'dfa'; $('dfa-tab').classList.add('active'); $('nfa-tab').classList.remove('active'); $('dfa-tab').setAttribute('aria-selected', 'true'); $('nfa-tab').setAttribute('aria-selected', 'false'); renderGraph(); });
 $('run-button').addEventListener('click', render);
 $('reset-button').addEventListener('click', () => { patternInput.value = '(a|b)*abb'; inputInput.value = 'abababb'; repetitions.value = 8; $('repetitions-value').textContent = '8×'; allowDfa.checked = true; render(); });
-document.querySelectorAll('[data-pattern]').forEach((button) => button.addEventListener('click', () => { patternInput.value = button.dataset.pattern; render(); }));
+document.querySelectorAll('[data-pattern]').forEach((button) => button.addEventListener('click', () => { patternInput.value = button.dataset.pattern; if (button.dataset.input !== undefined) inputInput.value = button.dataset.input; if (button.dataset.repetitions) repetitions.value = button.dataset.repetitions; $('repetitions-value').textContent = `${repetitions.value}×`; $('step-range').value = inputInput.value.length; render(); }));
 render();
