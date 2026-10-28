@@ -27,7 +27,18 @@ enable_testing()
 find_package(GTest CONFIG QUIET)
 
 if (GTest_FOUND)
-    add_executable(regex_forge_tests tests/lexer_test.cpp tests/parser_test.cpp tests/backtracking_test.cpp tests/analyzer_test.cpp tests/selector_test.cpp tests/runtime_adaptation_test.cpp tests/engine_contract_test.cpp tests/nfa_test.cpp tests/dispatcher_test.cpp tests/lazy_dfa_test.cpp)
+    add_executable(regex_forge_tests
+        tests/lexer_test.cpp
+        tests/parser_test.cpp
+        tests/backtracking_test.cpp
+        tests/analyzer_test.cpp
+        tests/selector_test.cpp
+        tests/runtime_adaptation_test.cpp
+        tests/engine_contract_test.cpp
+        tests/nfa_test.cpp
+        tests/dispatcher_test.cpp
+        tests/lazy_dfa_test.cpp
+    )
     target_link_libraries(regex_forge_tests PRIVATE regex_forge GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(regex_forge_tests)

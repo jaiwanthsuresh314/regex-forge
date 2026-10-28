@@ -15,7 +15,7 @@
 namespace regexforge {
 namespace {
 
-struct NfaState {
+struct PrivateNfaState {
     std::vector<std::size_t> epsilon;
     std::vector<std::pair<unsigned char, std::size_t>> transitions;
     bool accepting = false;
@@ -66,7 +66,7 @@ public:
         throw std::logic_error("unknown AST node kind");
     }
 
-    std::vector<NfaState> states;
+    std::vector<PrivateNfaState> states;
 
 private:
     std::size_t add() { states.emplace_back(); return states.size() - 1; }
@@ -74,7 +74,7 @@ private:
 
 using StateSet = std::vector<std::size_t>;
 
-void closure(const std::vector<NfaState>& nfa, StateSet& set) {
+void closure(const std::vector<PrivateNfaState>& nfa, StateSet& set) {
     std::vector<bool> seen(nfa.size(), false);
     std::vector<std::size_t> pending;
     for (const auto state : set) {
@@ -110,7 +110,7 @@ struct LazyDFAMatcher::Impl {
         static constexpr std::size_t no_transition = static_cast<std::size_t>(-1);
     };
 
-    std::vector<NfaState> nfa;
+    std::vector<PrivateNfaState> nfa;
     std::vector<DfaState> dfa;
     std::unordered_map<StateSet, std::size_t, SetHash> cache;
     std::size_t start = 0;
